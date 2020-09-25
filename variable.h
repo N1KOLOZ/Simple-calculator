@@ -14,7 +14,7 @@ bool Is_declared(const std::string& name) {
     return vars.count(name) == 1;
 }
 
-double Define_var(std::string name, double value) {
+double Define_name(std::string name, double value) {
     if (vars.count(name) == 1) {
         throw std::logic_error("Variable is already defined");
     }
