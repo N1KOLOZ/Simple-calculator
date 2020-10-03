@@ -7,10 +7,12 @@
 
 #include <cmath>
 
+Var_table vars;
 Token_stream ts;
 Token Next_token();
 void Clean_up();
 
+void Set_args(std::vector<double>&);
 double Expression();
 double Term();
 double Primary();
@@ -21,7 +23,22 @@ double Statement();
 void Calculate();
 
 void SetArgs(std::vector<double>& args) {
-    // TODO
+    Token t = ts.get();
+
+    if (t.type != Type::LEFT_PAREN) {
+        throw std::logic_error("Expected left parenthesis after function");
+    }
+
+    int i = 0;
+    do {
+        args[i++] = Expression();
+        t = ts.get();
+    } while (t.type == Type::COMMA);
+
+
+    if (t.type != Type::RIGHT_PAREN) {
+        throw std::logic_error("Expected right parenthesis after function");
+    }
 }
 
 double Expression() {
@@ -66,6 +83,10 @@ double Term() {
 
             lhs = std::fmod(lhs, rhs);
             t = ts.get();
+        } else if (t.type == Type::OP_EXPONENTIATE) {
+            double rhs = Primary();
+            lhs = std::pow(lhs, rhs);
+            t = ts.get();
         } else {
             ts.putback(std::move(t));
             return lhs;
@@ -86,9 +107,14 @@ double Primary() {
 
         return expr;
     } else if (t.type == Type::FUNC_SQRT) {
-        std::vector<double> args(1);
-        SetArgs(args);
-        return std::sqrt(Primary());
+        std::vector<double> args(1); SetArgs(args);
+        return std::sqrt(args[0]);
+    } else if (t.type == Type::FUNC_MIN) {
+        std::vector<double> args(2); SetArgs(args);
+        return std::min(args[0], args[1]);
+    } else if (t.type == Type::FUNC_MAX) {
+        std::vector<double> args(2); SetArgs(args);
+        return std::max(args[0], args[1]);
     } else if (t.type == Type::NUMBER) {
         return t.value;
     } else if (t.type == Type::OP_SUBTRACT) {
@@ -96,14 +122,21 @@ double Primary() {
     } else if (t.type == Type::OP_ADD) {
         return Primary();
     } else if (t.type == Type::VAR_NAME) {
-        return Get_value(t.name);
+        Token t2 = ts.get();
+        if (t2.type == Type::ASSIGN) {
+            double value = Expression();
+            return vars.Set_value(std::move(t.name), value);
+        } else {
+            ts.putback(t2);
+            return vars.Get_value(t.name);
+        }
     } else {
         throw std::logic_error("Expected primary");
     }
 }
 
 void Clean_up() {
-    ts.ignore(';');
+    ts.ignore();
 }
 
 double Declaration() {
@@ -118,8 +151,7 @@ double Declaration() {
     }
 
     double value = Expression();
-
-    return Define_name(std::move(t.name), value);
+    return vars.Define_name(std::move(t.name), value);
 }
 
 double Statement() {
@@ -134,7 +166,7 @@ double Statement() {
 }
 
 void Calculate() {
-    while (std::cin) {
+    while (true) {
         try {
             std::cout << "> ";
             Token t = ts.get();
@@ -152,11 +184,10 @@ void Calculate() {
     }
 }
 
-
 int main() {
     try {
-        Define_name("pi", 3.1415926535);
-        Define_name("e", 2.7182818284);
+        vars.Define_name("pi", 3.1415926535);
+        vars.Define_name("e", 2.7182818284);
 
         Calculate();
     } catch (const std::exception &e) {

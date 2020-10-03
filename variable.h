@@ -2,29 +2,29 @@
 
 #include <map>
 
-class Variable {
+class Var_table {
+private:
+    std::map<std::string, double> vars;
 public:
-    std::string name;
-    double value;
+    bool Is_declared(const std::string& name);
+    double Define_name(std::string name, double value);
+    double Get_value(const std::string& name);
+    double Set_value(std::string name, double value);
 };
 
-std::map<std::string, double> vars;
-
-bool Is_declared(const std::string& name) {
+bool Var_table::Is_declared(const std::string& name) {
     return vars.count(name) == 1;
 }
 
-double Define_name(std::string name, double value) {
+double Var_table::Define_name(std::string name, double value) {
     if (vars.count(name) == 1) {
         throw std::logic_error("Variable is already defined");
     }
 
-    vars[std::move(name)] = value;
-
-    return value;
+    return vars[std::move(name)] = value;
 }
 
-double Get_value(const std::string& name) {
+double Var_table::Get_value(const std::string& name) {
     if (vars.count(name) == 0) {
         throw std::logic_error("Undefined variable");
     }
@@ -32,10 +32,10 @@ double Get_value(const std::string& name) {
     return vars.at(name);
 }
 
-void Set_value(std::string name, double value) {
+double Var_table::Set_value(std::string name, double value) {
     if (vars.count(name) == 0) {
         throw std::logic_error("Undefined variable");
     }
 
-    vars[std::move(name)] = value;
+    return vars[std::move(name)] = value;
 }

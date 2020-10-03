@@ -4,7 +4,7 @@
 #include <stdexcept>
 #include <string>
 
-enum Type {
+enum class Type {
     NUMBER,
 
     VAR_NAME,
@@ -25,7 +25,10 @@ enum Type {
 
     LEFT_PAREN,
     RIGHT_PAREN,
+    COMMA,
     END_EXPR,
+
+    HELP,
     QUIT,
 
     DEFAULT,
@@ -61,7 +64,7 @@ class Token_stream {
 public:
     Token get();
     void putback(Token);
-    void ignore(char); // ignore tokens before symbol c including
+    void ignore(); // ignore tokens before symbol c including
 private:
     bool is_full{false};
     Token buffer;
@@ -73,12 +76,8 @@ Token Token_stream::get() {
         return buffer;
     }
 
-    if (!std::cin) {
-        throw std::logic_error("Expect input data");
-    }
-
     char c = 0;
-    std::cin >> c;
+    if (!(std::cin >> c)) { throw std::logic_error("Expect input data"); }
     if (isspace(c)) {
         return get();
     } else if (isdigit(c) || c == '.') {
@@ -99,8 +98,12 @@ Token Token_stream::get() {
         return Token(Type::OP_DIVIDE);
     } else if (c == '%') {
         return Token(Type::OP_MOD);
+    } else if (c == '^') {
+            return Token(Type::OP_EXPONENTIATE);
 
-    } else if (c == '(') {
+    } else if (c == ',') {
+        return Token(Type::COMMA);
+    }  else if (c == '(') {
         return Token(Type::LEFT_PAREN);
     } else if (c == ')') {
         return Token(Type::RIGHT_PAREN);
@@ -109,22 +112,31 @@ Token Token_stream::get() {
     } else if (c == ';') {
         return Token(Type::END_EXPR);
     } else if (c == '\n') {
-        return Token(Type::END_EXPR);
+        return Token(Type::END_EXPR); // is needed to change
     } else if (isalpha(c)) {
         std::string name(1, c);
 
         while (std::cin.get(c) &&
-               (isalpha(c) || isdigit(c) || c == '_')) {
-            name += c;
-        }
+               (isalpha(c) || isdigit(c) || c == '_'))
+        { name += c; }
         std::cin.putback(c);
+
+        if (std::cin.peek() == '(') {
+            if (name == "sqrt") {
+                return Token(Type::FUNC_SQRT);
+            } else if (name == "min") {
+                return Token(Type::FUNC_MIN);
+            } else if (name == "max") {
+                return Token(Type::FUNC_MAX);
+            } else if (name == "quit") {
+                return Token(Type::QUIT);
+            } else if (name == "help") {
+                return Token(Type::HELP);
+            }
+        }
 
         if (name == "let") {
             return Token(Type::VAR_DEF);
-        } else if (name == "sqrt") {
-            return Token(Type::FUNC_SQRT);
-        } else if (name == "quit") {
-            return Token(Type::QUIT);
         } else {
             return Token(Type::VAR_NAME, std::move(name));
         }
@@ -142,8 +154,9 @@ void Token_stream::putback(Token t) {
     is_full = true;
 }
 
-// IS NEEDED TO CHANGE
-void Token_stream::ignore(char stop) {
+void Token_stream::ignore() {
+    const char stop = ';';
+
     if (is_full) {
         is_full = false;
         if (buffer.type == Type::END_EXPR) { return; }
