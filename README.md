@@ -8,6 +8,7 @@ cmake
 ./
 
 ## Supports
+Each expression must be ended with ";"
 ### Operations:
 -Addition;<br/>
 -Subtraction;<br/>
