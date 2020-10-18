@@ -9,18 +9,18 @@ cmake
 
 ## Supports
 ### Operations:
--Addition;
--Subtraction;
--Multiplication;
--Division;
--Exponentiation;
+-Addition;<br/>
+-Subtraction;<br/>
+-Multiplication;<br/>
+-Division;<br/>
+-Exponentiation;<br/>
 -Modulus;
 ### Functions:
--Squared root "sqrt";
--Minimum of 2 numbers "min";
+-Squared root "sqrt";<br/>
+-Minimum of 2 numbers "min";<br/>
 -Maximum of 2 numbers "max";
 ### Variables:
-To declare a variable out "let" before the name.
+To declare a variable put "let" before the name.
 
 ## Information
 Implementation based on the book Programming: Principles and Practice Using C++ by Bjarne Stroustrup with a solution of tasks.
